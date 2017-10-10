@@ -1,83 +1,61 @@
-#pragma once
+#include "http.hpp"
 
-#include <Arduino.h>
-
-#define MAX_REQUEST_PARAMS 3
-
-// pointer to one word in any given buffer
 // --------------------------------------------------------------------------
-struct Text {
-  char *positon = nullptr;
-  int length = -1;
-
-  bool operator==(const char* s) {
-    if (positon == nullptr) {
+bool Text::operator==(const char *s) {
+  if (positon == nullptr) {
+    return false;
+  }
+  if (length != (int)strlen(s)) {
+    return false;
+  }
+  for (int i = 0; i < length; ++i) {
+    if (*(positon + i) != s[i]) {
       return false;
     }
-    if (length != strlen(s)) {
-      return false;
-    }
-    for (int i = 0; i < length; ++i) {
-      if (*(positon + i) != s[i]) {
-        return false;
-      }
-    }
-    return true;
   }
+  return true;
+}
 
-  int get(char *buf, int size) {
-    if (positon == nullptr) {
-      return -1;
-    }
-    if (size < length + 1) {
-      return -2;
-    }
-    int i;
-    for (i = 0; i < length; ++i) {
-      buf[i] = *(positon + i);
-    }
-    buf[i] = 0;  // string terminator
-    return i;
+// --------------------------------------------------------------------------
+int Text::get(char *buf, int size) {
+  if (positon == nullptr) {
+    return -1;
   }
-};
+  if (size < length + 1) {
+    return -2;
+  }
+  int i;
+  for (i = 0; i < length; ++i) {
+    buf[i] = *(positon + i);
+  }
+  buf[i] = 0;  // string terminator
+  return i;
+}
 
 // combination of two words, parameter name and it value
 // --------------------------------------------------------------------------
-struct Parameter {
-  Text name;
-  Text value;
+bool Parameter::exists() {
+  return name.positon != nullptr;
+}
 
-  bool exists() {
-    return name.positon != nullptr;
-  }
+bool Parameter::operator==(const char *s) {
+  return value == s;
+}
 
-  bool operator==(const char* s) {
-    return value == s;
-  }
-};
-
-// empty parameter
-Parameter notFound;
-
-// Request structure. Contains paths and params
+// get paths and params from uri
 // --------------------------------------------------------------------------
-struct Request {
-  Text path;
-  Parameter p[MAX_REQUEST_PARAMS];
-
-  Parameter &parameter(const char* name) {
-    for (int i = 0; i < MAX_REQUEST_PARAMS; ++i) {
-      if (p[i].name == name) {
-        return p[i];
-      }
+const Parameter &Request::parameter(const char *name) {
+  for (int i = 0; i < MAX_REQUEST_PARAMS; ++i) {
+    if (p[i].name == name) {
+      return p[i];
     }
-    return notFound;
   }
-};
+  return notFound;
+}
 
 // URL parser
 // --------------------------------------------------------------------------
-int parseHTTP(char *buf, int size, struct Request *request) {
+int parseHTTP(char *buf, int size, Request *request) {
   // only GET method supported
   if (strncmp(buf, "GET ", 4) != 0) {
     return -5;
@@ -101,9 +79,9 @@ int parseHTTP(char *buf, int size, struct Request *request) {
         if (params >= 0 && request->p[params].value.length == -1) {
           request->p[params].value.length = buf + i - request->p[params].value.positon;
         }
-        if (params >= 0){
+        if (params >= 0) {
           return params;
-        }        
+        }
         return 0;
       }
       return -2;
@@ -123,7 +101,7 @@ int parseHTTP(char *buf, int size, struct Request *request) {
       if (params >= MAX_REQUEST_PARAMS) {
         return params;
       }
-      // start writing new parameter int struct
+      // start writing new parameter
       request->p[params].name.positon = buf + i + 1;
       continue;
     }
@@ -141,53 +119,32 @@ int parseHTTP(char *buf, int size, struct Request *request) {
 
 // HTTP/1.0 200 OK\r\n
 // --------------------------------------------------------------------------
-size_t makeHTTPResponse(char *buf, int size, int code, const char *status) {
-  if (strlen(status) + 15 > size) {
+size_t makeHTTPResponse(char *buf, unsigned int size, int code, const char *status) {
+  int statuslen = strlen(status);
+  if (statuslen + 18 > size) {
     return -1;
   }
-  if (code < 0 || code > 999) {
+  if (code < 100 || code > 999) {
     return -2;
   }
 
-  char num[10];
+  char num[5];
   itoa(code, num, 10);
-  int numlen = strlen(num);
-  int statuslen = strlen(status);
   char *p = buf;
 
   memcpy(p, "HTTP/1.0 ", 9);
   p += 9;
-  
-  memcpy(p, num, numlen);
-  p += numlen;
+
+  memcpy(p, num, 3);
+  p += 3;
 
   memcpy(p, " ", 1);
   p += 1;
-  
+
   memcpy(p, status, statuslen);
   p += statuslen;
-  
-  memcpy(p, "\r\n\0", 3);
+
+  memcpy(p, "\r\n\r\n\0", 5);
 
   return strlen(buf);
-}
-
-// --------------------------------------------------------------------------
-void writeAndClose(char *buf, int size, EthernetClient &client, int code, const char *s) {
-  int res = makeHTTPResponse(buf, size, code, s);
-  if (res > 0) {
-    client.println(buf);
-    client.stop();
-    return;
-  }
-
-  res = makeHTTPResponse(buf, size, 500, "MR error 1");
-  if (res > 0) {
-    client.println(buf);
-    client.stop();
-    return;
-  }
-
-  // cannot answer anything =(
-  client.stop();
 }

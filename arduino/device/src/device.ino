@@ -1,9 +1,9 @@
 #include <Arduino_FreeRTOS.h>
 #include <Ethernet2.h>
 
-#include "heater.hpp"
-#include "http.hpp"
- 
+#include <heater.hpp>
+#include <http.hpp>
+
 byte mac[] = {0x90, 0xA2, 0xda, 0x10, 0xe2, 0x04};
 
 IPAddress ip(192, 168, 55, 2);
@@ -36,20 +36,38 @@ void setup() {
   server.begin();
 }
 
+// --------------------------------------------------------------------------
+void writeAndClose(char *buf, int size, EthernetClient &client, int code, const char *s) {
+  int res = makeHTTPResponse(buf, size, code, s);
+  if (res > 0) {
+    client.println(buf);
+    client.stop();
+    return;
+  }
+
+  res = makeHTTPResponse(buf, size, 500, "MR error 1");
+  if (res > 0) {
+    client.println(buf);
+    client.stop();
+    return;
+  }
+
+  // cannot answer anything =(
+  client.stop();
+}
+
 void loop() {
   EthernetClient client = server.available();
 
-  delay(10);
-
-  if (client && client.available()) {
-    Serial.println("We have a new client");
+  if (client.available()) {
+    // Serial.println("We have a new client");
 
     size_t size = 200;
     char buf[size];
 
     int res = client.read((uint8_t *)&buf, size);
     if (res <= 0) {
-      Serial.println("ERROR 1");
+      // Serial.println("ERROR 1");
       writeAndClose(buf, size, client, 400, "Bad request [1]");
       return;
     }
@@ -62,32 +80,34 @@ void loop() {
       writeAndClose(buf, size, client, 400, "Bad request [2]");
       return;
     }
-    Serial.println(res);
+    // Serial.println(res);
 
     if (request.parameter("test") == "true") {
-      Serial.println("BINGO1");
+      // Serial.println("BINGO1");
     }
 
     if (request.parameter("on").exists()) {
-      Serial.println("BINGO2");
+      // Serial.println("BINGO2");
       char value[10];
       request.parameter("on").value.get(value, 10);
-      Serial.print("on:");
-      Serial.println(value);
+      // Serial.print("on:");
+      // Serial.println(value);
     }
 
     if (request.path == "/info") {
-      Serial.println("BINGO3");
+      // Serial.println("BINGO3");
     }
 
     char value[50];
     res = request.path.get(value, 50);
-    Serial.println(res);
-    Serial.println(value);
+    // Serial.println(res);
+    // Serial.println(value);
 
-    writeAndClose(buf, size, client, 200, "OK");
+    writeAndClose(buf, size, client, 200, value);
+    // Serial.println("exit");
   }
 
   // maintain dhcp connection
   Ethernet.maintain();
+
 }
