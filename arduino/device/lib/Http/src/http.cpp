@@ -1,15 +1,13 @@
 #include "http.hpp"
 
+namespace http {
 // --------------------------------------------------------------------------
 bool Text::operator==(const char *s) {
-  if (positon == nullptr) {
+  if (position == nullptr) {
     return false;
   }
-  if (length != (int)strlen(s)) {
-    return false;
-  }
-  for (int i = 0; i < length; ++i) {
-    if (*(positon + i) != s[i]) {
+  for (int16_t i = 0; i < length; ++i) {
+    if (*(position + i) != s[i]) {
       return false;
     }
   }
@@ -17,25 +15,39 @@ bool Text::operator==(const char *s) {
 }
 
 // --------------------------------------------------------------------------
-int Text::get(char *buf, int size) {
-  if (positon == nullptr) {
+int16_t Text::get(char *buf, int16_t size) {
+  if (position == nullptr) {
     return -1;
   }
   if (size < length + 1) {
     return -2;
   }
-  int i;
+  int16_t i;
   for (i = 0; i < length; ++i) {
-    buf[i] = *(positon + i);
+    buf[i] = *(position + i);
   }
   buf[i] = 0;  // string terminator
   return i;
 }
 
+#define MAX_NUMERIC_LEN 10
+// --------------------------------------------------------------------------
+bool Text::copyInt16To(uint16_t &val) {
+  if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+    return false;
+  }
+
+  char value[MAX_NUMERIC_LEN];
+  memcpy(value, position, length);
+  value[length] = 0;
+  val = atoi(value);
+  return true;
+}
+
 // combination of two words, parameter name and it value
 // --------------------------------------------------------------------------
 bool Parameter::exists() {
-  return name.positon != nullptr;
+  return name.position != nullptr;
 }
 
 bool Parameter::operator==(const char *s) {
@@ -45,7 +57,7 @@ bool Parameter::operator==(const char *s) {
 // get paths and params from uri
 // --------------------------------------------------------------------------
 const Parameter &Request::parameter(const char *name) {
-  for (int i = 0; i < MAX_REQUEST_PARAMS; ++i) {
+  for (int16_t i = 0; i < MAX_REQUEST_PARAMS; ++i) {
     if (p[i].name == name) {
       return p[i];
     }
@@ -55,7 +67,7 @@ const Parameter &Request::parameter(const char *name) {
 
 // URL parser
 // --------------------------------------------------------------------------
-int parseHTTP(char *buf, int size, Request *request) {
+int16_t parseHTTP(char *buf, int16_t size, Request &request) {
   // only GET method supported
   if (strncmp(buf, "GET ", 4) != 0) {
     return -5;
@@ -65,19 +77,19 @@ int parseHTTP(char *buf, int size, Request *request) {
   char params = -1;
 
   // GET /path?params=1 HTTP/1.1\r\n
-  for (int i = 0; i < size; i++) {
+  for (int16_t i = 0; i < size; i++) {
     if (buf[i] == ' ') {
       spaces++;
       if (spaces == 1) {
-        request->path.positon = buf + i + 1;
+        request.path.position = buf + i + 1;
         continue;
       }
       if (spaces == 2) {
-        if (request->path.length == -1) {
-          request->path.length = buf + i - request->path.positon;
+        if (request.path.length == -1) {
+          request.path.length = buf + i - request.path.position;
         }
-        if (params >= 0 && request->p[params].value.length == -1) {
-          request->p[params].value.length = buf + i - request->p[params].value.positon;
+        if (params >= 0 && request.p[params].value.length == -1) {
+          request.p[params].value.length = buf + i - request.p[params].value.position;
         }
         if (params >= 0) {
           return params;
@@ -88,28 +100,28 @@ int parseHTTP(char *buf, int size, Request *request) {
     }
 
     if (buf[i] == '?') {
-      request->path.length = buf + i - request->path.positon;
+      request.path.length = buf + i - request.path.position;
     }
 
     // parse uri params
     if (buf[i] == '?' || buf[i] == '&') {
       // set prev parameter value length
       if (params >= 0) {
-        request->p[params].value.length = buf + i - request->p[params].value.positon;
+        request.p[params].value.length = buf + i - request.p[params].value.position;
       }
       params++;
       if (params >= MAX_REQUEST_PARAMS) {
         return params;
       }
       // start writing new parameter
-      request->p[params].name.positon = buf + i + 1;
+      request.p[params].name.position = buf + i + 1;
       continue;
     }
 
     // ?test=true&d
     if (buf[i] == '=') {
-      request->p[params].name.length = buf + i - request->p[params].name.positon;
-      request->p[params].value.positon = buf + i + 1;
+      request.p[params].name.length = buf + i - request.p[params].name.position;
+      request.p[params].value.position = buf + i + 1;
       continue;
     }
   }
@@ -119,9 +131,9 @@ int parseHTTP(char *buf, int size, Request *request) {
 
 // HTTP/1.0 200 OK\r\n
 // --------------------------------------------------------------------------
-size_t makeHTTPResponse(char *buf, unsigned int size, int code, const char *status) {
-  int statuslen = strlen(status);
-  if (statuslen + 18 > size) {
+size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *status) {
+  int16_t statuslen = strlen(status);
+  if (statuslen + 16 > size) {
     return -1;
   }
   if (code < 100 || code > 999) {
@@ -144,7 +156,8 @@ size_t makeHTTPResponse(char *buf, unsigned int size, int code, const char *stat
   memcpy(p, status, statuslen);
   p += statuslen;
 
-  memcpy(p, "\r\n\r\n\0", 5);
+  memcpy(p, "\r\n\0", 3);
 
   return strlen(buf);
 }
+} // namespace http 

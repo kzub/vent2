@@ -5,6 +5,7 @@
 
 #define MAX_REQUEST_PARAMS 3
 
+namespace http {
 class Parameter;
 class Request;
 
@@ -12,15 +13,16 @@ class Request;
 // --------------------------------------------------------------------------
 class Text {
  private:
-  char *positon = nullptr;
-  int length = -1;
+  char *position = nullptr;
+  int16_t length = -1;
 
  public:
   bool operator==(const char *s);
-  int get(char *buf, int size);
+  int16_t get(char *buf, int16_t size);
+  bool copyInt16To(uint16_t &val);
 
   friend class Parameter;
-  friend int parseHTTP(char *buf, int size, Request *request);
+  friend int16_t parseHTTP(char *buf, int16_t size, Request &request);
 };
 
 // combination of two words, parameter name and it value
@@ -48,7 +50,7 @@ class Request {
 };
 
 // --------------------------------------------------------------------------
-int parseHTTP(char *buf, int size, Request *request);
-size_t makeHTTPResponse(char *buf, unsigned int size, int code, const char *status);
-
+int16_t parseHTTP(char *buf, int16_t size, Request &request);
+size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *status);
+}  // namespace http
 #endif
