@@ -23,6 +23,7 @@ void handler_fun(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.write(200, "OK", nullptr);
 }
 
+// ---
 void handler_info(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.write(200, "OK", "[\"fan1\"]");
 }

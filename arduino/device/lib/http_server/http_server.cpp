@@ -28,10 +28,6 @@ NetworkService::NetworkService(uint16_t port) : server(port) {
   server.begin();
 }
 
-NetworkService::~NetworkService() {
-  server.end();
-}
-
 // --------------------------------------------------------------------------
 void NetworkService::add_handler(const char *name, MethodHandler handler) {
   if (handlers_count > MAX_HANDLERS) {

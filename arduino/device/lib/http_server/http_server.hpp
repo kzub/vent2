@@ -44,7 +44,6 @@ class NetworkService : public VT::Routine {
 
  public:
   NetworkService(uint16_t port);
-  ~NetworkService();
   void add_handler(const char *name, MethodHandler);
 };
 }  // namespace server
