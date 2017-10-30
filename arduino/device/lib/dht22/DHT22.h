@@ -6,6 +6,7 @@ namespace DHT22 {
 
 #define DHT22_ERROR_VALUE -995
 #define DHT22_CHECK_STEP_US 4
+#define DHT22_READ_INTERVAL 2000
 
 enum class ErrorCode : uint8_t {
   NONE = 0,
@@ -32,19 +33,19 @@ class Error {
 };
 
 class Sensor {
- private:
   uint8_t bitmask;
   volatile uint8_t *reg;
   unsigned long lastReadTime;
   short int lastHumidity;
   short int lastTemperature;
 
- public:
-  Sensor(uint8_t pin);
-  Error readData();
   Error waitForLow(uint8_t us, Error stage);
   Error waitForHigh(uint8_t us, Error stage);
   Error measureHigh(uint8_t us, Error stage, uint8_t &retryCount);
+
+ public:
+  Sensor(uint8_t pin);
+  Error readData();
   short int getHumidityInt();
   short int getTemperatureCInt();
   float getHumidity();

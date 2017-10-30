@@ -29,7 +29,7 @@ Sensor::Sensor(uint8_t pin) {
 // Store the results in private member data to be read by public member functions
 Error Sensor::readData() {
   unsigned long currentTime = millis();
-  if (abs(currentTime - lastReadTime) < 2000) {
+  if (abs(currentTime - lastReadTime) < DHT22_READ_INTERVAL) {
     return Error(ErrorCode::TOO_QUICK);
   }
   lastReadTime = currentTime;
