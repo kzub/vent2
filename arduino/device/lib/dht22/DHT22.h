@@ -33,36 +33,37 @@ class Error {
 };
 
 class Sensor {
+ public:
+  Sensor(uint8_t pin);
+  Error readData();
+  int16_t getHumidityInt();
+  int16_t getTemperatureCInt();
+  float getHumidity();
+  float getTemperatureC();
+  float getTemperatureF();
+
+ private:
   uint8_t bitmask;
   volatile uint8_t *reg;
   unsigned long lastReadTime;
-  short int lastHumidity;
-  short int lastTemperature;
+  int16_t lastHumidity;
+  int16_t lastTemperature;
 
   Error waitForLow(uint8_t us, Error stage);
   Error waitForHigh(uint8_t us, Error stage);
   Error measureHigh(uint8_t us, Error stage, uint8_t &retryCount);
-
- public:
-  Sensor(uint8_t pin);
-  Error readData();
-  short int getHumidityInt();
-  short int getTemperatureCInt();
-  float getHumidity();
-  float getTemperatureC();
-  float getTemperatureF();
 };
 
 // Report the humidity in .1 percent increments, such that 635 means 63.5% relative humidity
 // Converts from the internal integer format on demand, so you might want
 // to cache the result.
-inline short int Sensor::getHumidityInt() {
+inline int16_t Sensor::getHumidityInt() {
   return lastHumidity;
 }
 
 // Get the temperature in decidegrees C, such that 326 means 32.6 degrees C.
 // The temperature may be negative, so be careful when handling the fractional part.
-inline short int Sensor::getTemperatureCInt() {
+inline int16_t Sensor::getTemperatureCInt() {
   return lastTemperature;
 }
 

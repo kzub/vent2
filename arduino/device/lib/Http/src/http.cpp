@@ -1,4 +1,4 @@
-#include "http.hpp"
+#include "http.h"
 
 namespace http {
 // --------------------------------------------------------------------------
@@ -32,11 +32,34 @@ int16_t Text::get(char *buf, int16_t size) {
 
 #define MAX_NUMERIC_LEN 10
 // --------------------------------------------------------------------------
-bool Text::copyInt16To(uint16_t &val) {
+bool Text::copyInt16To(int16_t &val) {
   if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
     return false;
   }
+  char value[MAX_NUMERIC_LEN];
+  memcpy(value, position, length);
+  value[length] = 0;
+  val = atoi(value);
+  return true;
+}
 
+// --------------------------------------------------------------------------
+bool Text::copyUInt16To(uint16_t &val) {
+if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+    return false;
+  }
+  char value[MAX_NUMERIC_LEN];
+  memcpy(value, position, length);
+  value[length] = 0;
+  val = atoi(value);
+  return true;
+}
+
+// --------------------------------------------------------------------------
+bool Text::copyInt8To(int8_t &val) {
+if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+    return false;
+  }
   char value[MAX_NUMERIC_LEN];
   memcpy(value, position, length);
   value[length] = 0;
@@ -52,6 +75,10 @@ bool Parameter::exists() {
 
 bool Parameter::operator==(const char *s) {
   return value == s;
+}
+
+Parameter::operator bool(){
+  return name.position != nullptr;
 }
 
 // get paths and params from uri
@@ -160,4 +187,4 @@ size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *sta
 
   return strlen(buf);
 }
-} // namespace http 
+} // namespace http

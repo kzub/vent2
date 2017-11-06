@@ -6,16 +6,17 @@
 
 namespace pwm {
 class Controller : public VT::Routine {
-  void body();
-  const uint8_t pin;
-  bool is_on = false;
-
  public:
   Controller(uint8_t pin);
   uint16_t on_delay = 0;
   uint16_t off_delay = 0;
   void turnOn();
   void turnOff();
+
+ private:
+  void body();
+  const uint8_t pin;
+  bool is_on = false;
 };
 }  // namespace pow
 

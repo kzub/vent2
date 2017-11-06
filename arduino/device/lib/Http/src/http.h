@@ -12,14 +12,16 @@ class Request;
 // pointer to one word in any given buffer
 // --------------------------------------------------------------------------
 class Text {
- private:
-  char *position = nullptr;
-  int16_t length = -1;
-
  public:
   bool operator==(const char *s);
   int16_t get(char *buf, int16_t size);
-  bool copyInt16To(uint16_t &val);
+  bool copyUInt16To(uint16_t &val);
+  bool copyInt16To(int16_t &val);
+  bool copyInt8To(int8_t &val);
+
+ private:
+  char *position = nullptr;
+  int16_t length = -1;
 
   friend class Parameter;
   friend int16_t parseHTTP(char *buf, int16_t size, Request &request);
@@ -34,6 +36,7 @@ class Parameter {
 
   bool exists();
   bool operator==(const char *s);
+  operator bool();
 };
 
 // Empty parameter
