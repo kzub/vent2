@@ -19,7 +19,7 @@ void Controller::body() {
 
   auto out_temp = temp.getTemperatureCInt();
 
-  if(out_temp > HEATER_MAX_TEMPERATURE){
+  if (out_temp > HEATER_MAX_TEMPERATURE) {
     turnOff();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
@@ -60,7 +60,7 @@ void Controller::body() {
 }
 
 //---------------------------------------------------
-void Controller::turnOff(){
+void Controller::turnOff() {
   coil.turnOff();
   coil.on_delay = 0;
   coil.off_delay = 0;

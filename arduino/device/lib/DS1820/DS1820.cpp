@@ -2,6 +2,11 @@
 
 namespace DS1820 {
 //---------------------------------------------------------------
+Sensor::Sensor(uint8_t pin) : ds(pin), error(ErrorCode::NOT_PRESENT) {
+  pinMode(pin, INPUT);
+}
+
+//---------------------------------------------------------------
 bool Sensor::init() {
   if (initialized) {
     return true;
@@ -71,7 +76,7 @@ void Sensor::readData(void) {
   }
   // Tc_100 = (6 * TReading) + TReading / 4;    // multiply by (100 * 0.0625) or 6.25
   Tc_100 = (TReading * 10 / 2);  // DS 1820 with 0.5 Degree Resolution
-  Whole = Tc_100 / 100;  // separate off the whole and fractional portions
+  Whole = Tc_100 / 100;          // separate off the whole and fractional portions
   Fract = Tc_100 % 100;
   checkResult();
 }

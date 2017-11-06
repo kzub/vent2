@@ -35,9 +35,7 @@ class Error {
 
 class Sensor {
  public:
-  Sensor(uint8_t pin) : ds(pin), error(ErrorCode::NOT_PRESENT) {
-  }
-
+  Sensor(uint8_t pin);
   bool init();
   void startConversion(void);
   void readData(void);

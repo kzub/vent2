@@ -21,11 +21,16 @@ class ResponseWriter {
  public:
   ResponseWriter(EthernetClient &client) : client(client){};
   ~ResponseWriter();
-  void write(uint16_t code, const char *s, const char *text);
+  void end();
+  size_t end(uint16_t code, const char *s, const char *text);
+  size_t writeHead(uint16_t code, const char *s);
+  size_t write(const char *text);
 
  private:
+  void writeInternalError(uint8_t code);
   EthernetClient &client;
   bool closed = false;
+  bool head_written = false;
 };
 
 // --------------------------------------------------------------------------

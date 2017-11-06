@@ -26,7 +26,6 @@ void DHT22Sensor::body() {
   }
 }
 
-
 //----------------------------------------------------------------------
 DS1820Sensor::DS1820Sensor(uint8_t pin) : DS1820::Sensor(pin) {
 }
@@ -34,13 +33,13 @@ DS1820Sensor::DS1820Sensor(uint8_t pin) : DS1820::Sensor(pin) {
 //----------------------------------------------------------------------
 void DS1820Sensor::body() {
   if (is_current_step()) {
-    if(init() == false){
+    if (init() == false) {
       repeat_step(1000);
       return;
     }
 
     startConversion();
-    next_step(DS1820_READ_INTERVAL);      
+    next_step(DS1820_READ_INTERVAL);
     return;
   }
   Serial.print("temp:");

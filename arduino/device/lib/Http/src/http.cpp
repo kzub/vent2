@@ -45,7 +45,7 @@ bool Text::copyInt16To(int16_t &val) {
 
 // --------------------------------------------------------------------------
 bool Text::copyUInt16To(uint16_t &val) {
-if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+  if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
     return false;
   }
   char value[MAX_NUMERIC_LEN];
@@ -57,7 +57,7 @@ if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
 
 // --------------------------------------------------------------------------
 bool Text::copyInt8To(int8_t &val) {
-if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+  if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
     return false;
   }
   char value[MAX_NUMERIC_LEN];
@@ -77,7 +77,7 @@ bool Parameter::operator==(const char *s) {
   return value == s;
 }
 
-Parameter::operator bool(){
+Parameter::operator bool() {
   return name.position != nullptr;
 }
 
@@ -160,7 +160,7 @@ int16_t parseHTTP(char *buf, int16_t size, Request &request) {
 // --------------------------------------------------------------------------
 size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *status) {
   int16_t statuslen = strlen(status);
-  if (statuslen + 16 > size) {
+  if (statuslen + 18 > size) {
     return -1;
   }
   if (code < 100 || code > 999) {
@@ -183,8 +183,8 @@ size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *sta
   memcpy(p, status, statuslen);
   p += statuslen;
 
-  memcpy(p, "\r\n\0", 3);
+  memcpy(p, "\r\n\r\n\0", 5);
 
   return strlen(buf);
 }
-} // namespace http
+}  // namespace http

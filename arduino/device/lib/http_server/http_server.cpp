@@ -8,7 +8,7 @@ void initialize(uint8_t *macaddr, uint8_t *ipaddr) {
   Ethernet.begin(macaddr, ip);
 
   //  while(!Ethernet.begin(mac)){
-  //    Serial.println("Failed to configure Ethernet using DHCP");
+  //    Serial.print("Failed to configure Ethernet using DHCP");
   //    delay(5000);
   //  }
 }
@@ -39,26 +39,78 @@ void NetworkService::add_handler(const char *name, MethodHandler handler) {
 }
 
 // --------------------------------------------------------------------------
-void ResponseWriter::write(uint16_t code, const char *s, const char *text) {
+void ResponseWriter::writeInternalError(uint8_t code) {
+  auto res = http::makeHTTPResponse(buffer, buffer_size, 500, "Internal Error " + code);
+  if (res > 0) {
+    client.println(buffer);
+  }
   closed = true;
-  int res = http::makeHTTPResponse(buffer, buffer_size, code, s);
-  if (res > 0) {
-    client.println(buffer);
-    if (text != nullptr) {
-      client.println(text);
-    }
-    client.stop();
-    return;
-  }
-
-  res = http::makeHTTPResponse(buffer, buffer_size, 500, "Internal Error 1");
-  if (res > 0) {
-    client.println(buffer);
-    client.stop();
-    return;
-  }
+  client.stop();
+  return;
 }
 
+// --------------------------------------------------------------------------
+size_t ResponseWriter::writeHead(uint16_t code, const char *s) {
+  if (closed) {
+    return 0;
+  }
+  if (head_written) {
+    writeInternalError(1);
+    return 0;
+  }
+  head_written = true;
+
+  auto res = http::makeHTTPResponse(buffer, buffer_size, code, s);
+  if (res > 0) {
+    client.print(buffer);
+    return res;
+  }
+
+  writeInternalError(2);
+  return 0;
+}
+
+// --------------------------------------------------------------------------
+size_t ResponseWriter::write(const char *text) {
+  if (closed) {
+    return 0;
+  }
+  if (!head_written) {
+    writeInternalError(3);
+    return 0;
+  }
+  client.print(text);
+}
+
+// --------------------------------------------------------------------------
+size_t ResponseWriter::end(uint16_t code, const char *s, const char *text) {
+  if (closed) {
+    return 0;
+  }
+
+  auto res = writeHead(code, s);
+  if (res > 0) {
+    if (text != nullptr) {
+      client.print(text);
+    }
+    client.stop();
+    closed = true;
+  }
+
+  return res;
+}
+
+// --------------------------------------------------------------------------
+void ResponseWriter::end() {
+  if (closed) {
+    return;
+  }
+
+  client.stop();
+  closed = true;
+}
+
+// --------------------------------------------------------------------------
 ResponseWriter::~ResponseWriter() {
   if (!closed) {
     client.stop();
@@ -85,7 +137,7 @@ void NetworkService::body() {
   http::Request request;
   res = http::parseHTTP(buffer, buffer_size, request);
   if (res < 0) {
-    resp.write(400, "Bad request [2]", nullptr);
+    resp.end(400, "Bad request [2]", nullptr);
     first_step();
     return;
   }
@@ -99,7 +151,7 @@ void NetworkService::body() {
     }
   }
 
-  resp.write(404, "Not found", "Not found");
+  resp.end(404, "Not found", "Not found");
   first_step();
 }
 }  // namespace server{
