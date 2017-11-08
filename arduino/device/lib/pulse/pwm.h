@@ -12,10 +12,10 @@ class Controller : public VT::Routine {
   uint16_t off_delay = 0;
   void turnOn();
   void turnOff();
+  const uint8_t pin;
 
  private:
   void body();
-  const uint8_t pin;
   bool is_on = false;
 };
 }  // namespace pow

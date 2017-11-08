@@ -43,6 +43,7 @@ class Sensor {
   int16_t getTemperatureCInt();
   float getTemperatureC();
   Error error;
+  const int8_t pin;
 
  private:
   void checkResult();

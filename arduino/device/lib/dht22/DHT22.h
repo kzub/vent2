@@ -41,6 +41,7 @@ class Sensor {
   float getHumidity();
   float getTemperatureC();
   float getTemperatureF();
+  const uint8_t pin;
 
  private:
   uint8_t bitmask;

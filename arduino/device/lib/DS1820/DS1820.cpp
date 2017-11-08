@@ -2,7 +2,7 @@
 
 namespace DS1820 {
 //---------------------------------------------------------------
-Sensor::Sensor(uint8_t pin) : ds(pin), error(ErrorCode::NOT_PRESENT) {
+Sensor::Sensor(uint8_t pin) : pin(pin), ds(pin), error(ErrorCode::NOT_PRESENT) {
   pinMode(pin, INPUT);
 }
 
@@ -52,7 +52,7 @@ void Sensor::startConversion(void) {
 void Sensor::readData(void) {
   uint8_t present = ds.reset();
   if (!present) {
-    Serial.println("NOTPRESENT");
+    // Serial.println("NOTPRESENT");
     error = Error(ErrorCode::NOT_PRESENT);
     return;
   }
@@ -70,13 +70,12 @@ void Sensor::readData(void) {
   int16_t TReading = (HighByte << 8) + LowByte;
 
   // calc temperature:
-  SignBit = TReading & 0x8000;           // test most sig bit
-  if (SignBit) {                         // negative
-    TReading = (TReading ^ 0xffff) + 1;  // 2's comp
-  }
-  // Tc_100 = (6 * TReading) + TReading / 4;    // multiply by (100 * 0.0625) or 6.25
-  Tc_100 = (TReading * 10 / 2);  // DS 1820 with 0.5 Degree Resolution
-  Whole = Tc_100 / 100;          // separate off the whole and fractional portions
+  SignBit = TReading & 0x8000;  // test most sig bit
+  int32_t tmp = TReading;
+  tmp *= 625;
+  tmp /= 100;
+  Tc_100 = (tmp & 0xFFFF) | SignBit;
+  Whole = Tc_100 / 100;  // separate off the whole and fractional portions
   Fract = Tc_100 % 100;
   checkResult();
 }
@@ -102,14 +101,14 @@ float Sensor::getTemperatureC() {
 //---------------------------------------------------------------
 void Sensor::checkResult() {
   if (Whole > 125 || Fract >= 100) {
-    Serial.print("Bad result:");
-    Serial.print(SignBit);
-    Serial.print(" ");
-    Serial.print(Tc_100);
-    Serial.print(" ");
-    Serial.print(Fract);
-    Serial.print(" ");
-    Serial.println(Whole);
+    // Serial.print("Bad result:");
+    // Serial.print(SignBit);
+    // Serial.print(" ");
+    // Serial.print(Tc_100);
+    // Serial.print(" ");
+    // Serial.print(Fract);
+    // Serial.print(" ");
+    // Serial.println(Whole);
     SignBit = 0;
     Tc_100 = 0;
     Fract = 0;

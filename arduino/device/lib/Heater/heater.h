@@ -35,14 +35,16 @@ class Controller : public VT::Routine {
   Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sensor& temp);
   int16_t target_temp = 0;
   uint8_t current_level = 0;
+  const uint8_t pin;
   void turnOff();
+
+  temperature::DS1820Sensor& temp;
 
  private:
   pwm::Controller coil;
   void body();
   bool is_on = false;
   pwm::Controller& fan;
-  temperature::DS1820Sensor& temp;
 };
 }  // namespace pow
 

@@ -16,7 +16,7 @@ namespace DHT22 {
 
 #define DHT22_DATA_BIT_COUNT 40
 
-Sensor::Sensor(uint8_t pin) {
+Sensor::Sensor(uint8_t pin) : pin(pin) {
   pinMode(pin, INPUT);
   bitmask = digitalPinToBitMask(pin);
   reg = portInputRegister(digitalPinToPort(pin));

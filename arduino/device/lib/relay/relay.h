@@ -10,10 +10,10 @@ class Controller {
   void turnOff();
   void turnOn();
   bool isOn();
+  const uint8_t pin;
 
  private:
   bool is_on = false;
-  uint8_t pin;
 };
 }  // namespace pow
 

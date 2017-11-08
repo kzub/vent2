@@ -10,17 +10,11 @@ Controller::Controller(uint8_t pin) : pin(pin) {
 //----------------------------------------------------------------------
 void Controller::turnOn() {
   is_on = true;
-  Serial.print("RELAY ON:");
-  Serial.println(pin);
-
   digitalWrite(pin, HIGH);
 }
 
 //----------------------------------------------------------------------
 void Controller::turnOff() {
-  Serial.print("RELAY OFF:");
-  Serial.println(pin);
-
   is_on = false;
   digitalWrite(pin, LOW);
 }
