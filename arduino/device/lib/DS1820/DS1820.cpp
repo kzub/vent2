@@ -124,7 +124,7 @@ void Sensor::getTextValue(char *buf, int len) {
     return;
   }
 
-  sprintf(buf, "%c%d.%d", SignBit ? '-' : '+', Whole, Fract);
+  sprintf(buf, "%c%d.%d", SignBit ? '-' : ' ', Whole, Fract);
 }
 
 //---------------------------------------------------------------

@@ -43,17 +43,23 @@ void write_relays_response(httpserver::ResponseWriter &resp);
 
 // --- INIT ---------------------------------------------------------------------
 void setup() {
-  // Serial.begin(115200);
-  // while (!Serial) {
-  // }
-
+  Serial.begin(115200);
+  Serial.println("initializing network...");
   httpserver::network::initialize(macaddr, nullptr /*, ipaddr*/);
 }
 
 // --- REQEUST HANDLERS ---------------------------------------------------------
-void handler_info(http::Request &request, httpserver::ResponseWriter &resp) {
+using specific_handler = void (*)(httpserver::ResponseWriter &resp);
+void finish_with_specific(httpserver::ResponseWriter &resp, const specific_handler &func) {
   resp.writeHead(200, HTTP_PUBLIC_OK);
   resp.write("[");
+  func(resp);
+  resp.write("]");
+  resp.end();
+}
+
+// --- INFO ------------------------------------------------------
+void write_info_response(httpserver::ResponseWriter &resp) {
   write_fans_response(resp);
   resp.write(",\r\n");
   write_relays_response(resp);
@@ -61,14 +67,16 @@ void handler_info(http::Request &request, httpserver::ResponseWriter &resp) {
   write_t_sensors_response(resp);
   resp.write(",\r\n");
   write_warmer_response(resp);
-  resp.write("]");
-  resp.end();
+}
+
+void handler_info(http::Request &request, httpserver::ResponseWriter &resp) {
+  finish_with_specific(resp, write_info_response);
 }
 
 // --- WARMER ------------------------------------------------------
 void write_warmer_response(httpserver::ResponseWriter &resp) {
   if (warmer.temp.error) {
-    sprintf(buf, "%s", warmer.temp.error.getMessage());
+    sprintf(buf, "\"%s\"", warmer.temp.error.getMessage());
   } else {
     warmer.temp.getTextValue(buf, sizeof(buf));
   }
@@ -80,10 +88,7 @@ void write_warmer_response(httpserver::ResponseWriter &resp) {
 
 void handler_warmer(http::Request &request, httpserver::ResponseWriter &resp) {
   request.parameter("temp").value.copyInt16To(warmer.target_temp);
-
-  resp.writeHead(200, HTTP_PUBLIC_OK);
-  write_warmer_response(resp);
-  resp.end();
+  finish_with_specific(resp, write_warmer_response);
 }
 
 // --- RELAYS ------------------------------------------------------
@@ -108,9 +113,7 @@ void handler_relays(http::Request &request, httpserver::ResponseWriter &resp) {
     }
   }
 
-  resp.writeHead(200, HTTP_PUBLIC_OK);
-  write_relays_response(resp);
-  resp.end();
+  finish_with_specific(resp, write_relays_response);
 }
 
 // --- FANS ------------------------------------------------------
@@ -130,9 +133,7 @@ void handler_fans(http::Request &request, httpserver::ResponseWriter &resp) {
     request.parameter("off").value.copyUInt16To(fans[id].off_delay);
   }
 
-  resp.writeHead(200, HTTP_PUBLIC_OK);
-  write_fans_response(resp);
-  resp.end();
+  finish_with_specific(resp, write_fans_response);
 }
 
 // --- T_SENSORS ------------------------------------------------------
@@ -140,7 +141,7 @@ void write_t_sensors_response(httpserver::ResponseWriter &resp) {
   for (uint8_t i = 0; i < t_sensors_count; ++i) {
     auto last = (i == t_sensors_count - 1) ? ' ' : ',';
     if (t_sensors[i].error) {
-      sprintf(buf, "%s", t_sensors[i].error.getMessage());
+      sprintf(buf, "\"%s\"", t_sensors[i].error.getMessage());
     } else {
       t_sensors[i].getTextValue(buf, sizeof(buf));
     }
@@ -151,9 +152,7 @@ void write_t_sensors_response(httpserver::ResponseWriter &resp) {
 }
 
 void handler_t_sensors(http::Request &request, httpserver::ResponseWriter &resp) {
-  resp.writeHead(200, HTTP_PUBLIC_OK);
-  write_t_sensors_response(resp);
-  resp.end();
+  finish_with_specific(resp, write_t_sensors_response);
 }
 
 // MAIN ---------------------------------------------------------------------

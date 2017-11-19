@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1.2">
 <head>
@@ -6,9 +6,17 @@
 		.line {
 			margin:	10px 0;
 		}
+		.label	{
+	    float: left;
+	    width: 100px;
+		}
+		.t_label	{
+			float: left;
+	    width: 130px;
+		}
 	</style>
 </head>
-<body> 
+<body>
 
 <script>
 var POWER = [
@@ -18,7 +26,7 @@ var POWER = [
 	[100, 100],
 	[120, 80],
 	[200, 80],
-	[100, 0] 
+	[100, 0]
 ];
 
 var Create = {};
@@ -39,9 +47,9 @@ function mockRequests(path){
 			return [
 				{"type":"fan", "id":0, "on":200, "off":200, "pin":3},
 				{"type":"fan", "id":1, "on":200, "off":200, "pin":4},
-				{"type":"t_sensor", "id":0, "t":28, "pin":5}, 
+				{"type":"t_sensor", "id":0, "t":28, "pin":5},
 				{"type":"t_sensor", "id":1, "t":29, "pin":6},
-				{"type":"relay", "id":0, "on":true, "pin":9}, 
+				{"type":"relay", "id":0, "on":true, "pin":9},
 				{"type":"relay", "id":1, "on":true, "pin":10},
 				{"type":"warmer", "id":0, "current_t":28, "target_t":30, "level":5, "pin":11}
 			];
@@ -49,6 +57,7 @@ function mockRequests(path){
 
 	return "error";
 }
+mockRequests = undefined;
 
 function request(path, callback){
 	if(mockRequests && callback){
@@ -56,7 +65,7 @@ function request(path, callback){
 		return;
 	}
 
-	var req = new XMLHttpRequest();	
+	var req = new XMLHttpRequest();
 	req.open('GET', 'http://' + server_ip + '/' + path)
 	req.send();
 	req.onreadystatechange = function() {
@@ -91,15 +100,18 @@ function makeLine(){
 	return line;
 }
 
-Create.fan = function(state){
+var fan_names = ["INFLOW", "OUTFLOW"]
+Create.fan = function(device){
 	var elm = document.createElement('input');
 	elm.type = 'range';
 	elm.min = 0; elm.max = POWER.length - 1;
-	elm.value = POWER.findIndex(function(e){ return e[0] == state.on && e[1] == state.off });
+	elm.value = POWER.findIndex(function(e){ return e[0] == device.on && e[1] == device.off });
 
 	var line = document.body.appendChild(makeLine());
-	var label = document.createElement('span');
-	label.innerHTML = 'POWER ID:' + state.id;	
+	var label = document.createElement('div');
+	label.classList.add('label');
+
+	label.innerHTML = fan_names[device.id];
 	line.appendChild(label);
 	line.appendChild(elm);
 	line.appendChild(document.createElement('br'));
@@ -107,7 +119,7 @@ Create.fan = function(state){
 	elm.oninput = function (ev){
 		var on  = POWER[ev.target.value][0];
 		var off = POWER[ev.target.value][1];
-		var url = 'fans?id=' + state.id + '&on=' + on + '&off=' + off;
+		var url = 'fans?id=' + device.id + '&on=' + on + '&off=' + off;
 		request(url);
 	};
 }
@@ -118,7 +130,7 @@ Create.relay = function(state){
 	elm.checked = state.state == 'on' ? true : false;
 
 	var line = document.body.appendChild(makeLine());
-	
+
 	var label = document.createElement('span');
 	label.innerHTML = 'RELAY ID:' + state.id;
 	line.appendChild(label);
@@ -132,18 +144,29 @@ Create.relay = function(state){
 	};
 }
 
-Create.t_sensor = function(state){
+var t_sensors_names = ["HEATER", "OUT", "IN"];
+
+Create.t_sensor = function(device){
 	var elm = document.createElement('div');
-	elm.innerHTML = 'TEMP ID:' + state.id + ' T:' + state.t;
+	elm.innerHTML = 'TEMP ' + t_sensors_names[device.id];
+	elm.classList.add('t_label');
 	var line = document.body.appendChild(makeLine());
 	line.appendChild(elm);
+	var temp = document.createElement('div');
+	temp.innerHTML =  device.t;
+	line.appendChild(temp);
 }
 
 Create.warmer = function(device){
 	var elm = document.createElement('div');
-	elm.innerHTML = 'WARMER ID:' + device.id + ' TC:' + device.current_t + ' TT:' + device.target_t + ' L:' + device.level;
+	elm.innerHTML = 'WARMER';
+	elm.classList.add('t_label');
 	var line = document.body.appendChild(makeLine());
 	line.appendChild(elm);
+
+	var temp = document.createElement('div');
+	temp.innerHTML = Math.round(device.current_t) + '/' + device.target_t + ' L:' + device.level;
+	line.appendChild(temp);
 }
 
 Create.info = function(devices){
@@ -153,6 +176,6 @@ Create.info = function(devices){
 }
 
 request('info',  getProc('info'));
-</script>  
+</script>
 </body>
 </html>
