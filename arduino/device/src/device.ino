@@ -41,7 +41,7 @@ void write_t_sensors_response(httpserver::ResponseWriter &resp);
 void write_fans_response(httpserver::ResponseWriter &resp);
 void write_relays_response(httpserver::ResponseWriter &resp);
 
-// INIT ---------------------------------------------------------------------
+// --- INIT ---------------------------------------------------------------------
 void setup() {
   // Serial.begin(115200);
   // while (!Serial) {
@@ -50,47 +50,31 @@ void setup() {
   httpserver::network::initialize(macaddr, nullptr /*, ipaddr*/);
 }
 
-// REQEUST HANDLERS ---------------------------------------------------------
-// ---
+// --- REQEUST HANDLERS ---------------------------------------------------------
 void handler_info(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.writeHead(200, HTTP_PUBLIC_OK);
   resp.write("[");
-  resp.write("\"fans\":");
   write_fans_response(resp);
-  resp.write(",\r\n\"relays\":");
+  resp.write(",\r\n");
   write_relays_response(resp);
-  resp.write(",\r\n\"t_sensors\":");
+  resp.write(",\r\n");
   write_t_sensors_response(resp);
-  resp.write(",\r\n\"warmer\":");
+  resp.write(",\r\n");
   write_warmer_response(resp);
   resp.write("]");
   resp.end();
 }
 
-// ---
-/*
-void handler_temp1(http::Request &request, httpserver::ResponseWriter &resp) {
-  if (temp1.error) {
-    sprintf(buffer, "{\"error\":\"%s\"}\r\n", temp1.error.getMessage());
-  } else {
-    char c[20], h[20];
-    dtostrf(temp1.getTemperatureC(), 6, 1, c);
-    dtostrf(temp1.getHumidity(), 6, 1, h);
-    sprintf(buffer, "{\"t\":%s,\"h\":%s, \"pin\":%d}\r\n", c, h, temp1.pin);
-  }
-  resp.end(200, HTTP_PUBLIC_OK, buffer);
-}
-*/
-
-// ---
+// --- WARMER ------------------------------------------------------
 void write_warmer_response(httpserver::ResponseWriter &resp) {
   if (warmer.temp.error) {
     sprintf(buf, "%s", warmer.temp.error.getMessage());
   } else {
     warmer.temp.getTextValue(buf, sizeof(buf));
   }
-  sprintf(buffer, "{\"current_t\":%s, \"target_t\":%d, \"level\":%d, \"pin\":%d}\r\n", buf,
-          warmer.target_temp, warmer.current_level, warmer.pin);
+  sprintf(buffer,
+          "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%d, \"level\":%d, \"pin\":%d}\r\n",
+          buf, warmer.target_temp, warmer.current_level, warmer.pin);
   resp.write(buffer);
 }
 
@@ -102,16 +86,15 @@ void handler_warmer(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.end();
 }
 
-// ---
+// --- RELAYS ------------------------------------------------------
 void write_relays_response(httpserver::ResponseWriter &resp) {
-  resp.write("[");
   for (uint8_t i = 0; i < relays_count; ++i) {
     auto state = relays[i].isOn() ? "true" : "false";
     auto last = (i == relays_count - 1) ? ' ' : ',';
-    sprintf(buffer, "{\"id\":%d, \"on\":%s, \"pin\":%d}%c", i, state, relays[i].pin, last);
+    sprintf(buffer, "{\"type\": \"relay\", \"id\":%d, \"on\":%s, \"pin\":%d}%c", i, state,
+            relays[i].pin, last);
     resp.write(buffer);
   }
-  resp.write("]\r\n");
 }
 
 void handler_relays(http::Request &request, httpserver::ResponseWriter &resp) {
@@ -130,16 +113,14 @@ void handler_relays(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.end();
 }
 
-// ---
+// --- FANS ------------------------------------------------------
 void write_fans_response(httpserver::ResponseWriter &resp) {
-  resp.write("[");
   for (uint8_t i = 0; i < fans_count; ++i) {
     auto last = (i == fans_count - 1) ? ' ' : ',';
-    sprintf(buffer, "{\"id\":%d, \"on\":%d, \"off\":%d, \"pin\":%d}%c", i, fans[i].on_delay,
-            fans[i].off_delay, fans[i].pin, last);
+    sprintf(buffer, "{\"type\": \"fan\", \"id\":%d, \"on\":%d, \"off\":%d, \"pin\":%d}%c", i,
+            fans[i].on_delay, fans[i].off_delay, fans[i].pin, last);
     resp.write(buffer);
   }
-  resp.write("]\r\n");
 }
 
 void handler_fans(http::Request &request, httpserver::ResponseWriter &resp) {
@@ -154,9 +135,8 @@ void handler_fans(http::Request &request, httpserver::ResponseWriter &resp) {
   resp.end();
 }
 
-// ---
+// --- T_SENSORS ------------------------------------------------------
 void write_t_sensors_response(httpserver::ResponseWriter &resp) {
-  resp.write("[");
   for (uint8_t i = 0; i < t_sensors_count; ++i) {
     auto last = (i == t_sensors_count - 1) ? ' ' : ',';
     if (t_sensors[i].error) {
@@ -164,10 +144,10 @@ void write_t_sensors_response(httpserver::ResponseWriter &resp) {
     } else {
       t_sensors[i].getTextValue(buf, sizeof(buf));
     }
-    sprintf(buffer, "{\"id\":%d, \"t\":%s, \"pin\":%d}%c", i, buf, t_sensors[i].pin, last);
+    sprintf(buffer, "{\"type\":\"t_sensor\", \"id\":%d, \"t\":%s, \"pin\":%d}%c", i, buf,
+            t_sensors[i].pin, last);
     resp.write(buffer);
   }
-  resp.write("]\r\n");
 }
 
 void handler_t_sensors(http::Request &request, httpserver::ResponseWriter &resp) {
@@ -181,13 +161,29 @@ void loop() {
   httpserver::NetworkService srv(80);
 
   srv.add_handler("/info", handler_info);
-  // srv.add_handler("/temp", handler_temp1);
   srv.add_handler("/warmer", handler_warmer);
   srv.add_handler("/relays", handler_relays);
   srv.add_handler("/fans", handler_fans);
   srv.add_handler("/t_sensors", handler_t_sensors);
+  // srv.add_handler("/temp", handler_temp1);
 
   auto engine = VT::Engine::getInstance();
   engine->start();
   // will never reach this point
 }
+
+/*
+// --- DHT22Sensor -----------------------------------------------------------
+void handler_temp1(http::Request &request, httpserver::ResponseWriter &resp) {
+  if (temp1.error) {
+    sprintf(buffer, "{\"error\":\"%s\"}\r\n", temp1.error.getMessage());
+  } else {
+    char c[20], h[20];
+    dtostrf(temp1.getTemperatureC(), 6, 1, c);
+    dtostrf(temp1.getHumidity(), 6, 1, h);
+    sprintf(buffer, "{\"type\":\"t_sensor22\", \"t\":%s,\"h\":%s, \"pin\":%d}\r\n", c, h,
+temp1.pin);
+  }
+  resp.end(200, HTTP_PUBLIC_OK, buffer);
+}
+*/

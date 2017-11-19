@@ -1,0 +1,158 @@
+<!DOCTYPE html> 
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.2">
+<head>
+	<style type="text/css">
+		.line {
+			margin:	10px 0;
+		}
+	</style>
+</head>
+<body> 
+
+<script>
+var POWER = [
+	[0, 0],
+	[60, 140],
+	[80, 120],
+	[100, 100],
+	[120, 80],
+	[200, 80],
+	[100, 0] 
+];
+
+var Create = {};
+
+document.ondblclick =function(){
+	document.location.href = document.location.href;
+};
+
+var server_ip = '192.168.0.177';
+var loadingprocess = document.createElement('div');
+loadingprocess.innerHTML = 'loading ' + server_ip + '...';
+document.body.appendChild(loadingprocess);
+
+function mockRequests(path){
+	switch(path){
+		case 'info':
+			loadingprocess.style.display = 'none';
+			return [
+				{"type":"fan", "id":0, "on":200, "off":200, "pin":3},
+				{"type":"fan", "id":1, "on":200, "off":200, "pin":4},
+				{"type":"t_sensor", "id":0, "t":28, "pin":5}, 
+				{"type":"t_sensor", "id":1, "t":29, "pin":6},
+				{"type":"relay", "id":0, "on":true, "pin":9}, 
+				{"type":"relay", "id":1, "on":true, "pin":10},
+				{"type":"warmer", "id":0, "current_t":28, "target_t":30, "level":5, "pin":11}
+			];
+	}
+
+	return "error";
+}
+
+function request(path, callback){
+	if(mockRequests && callback){
+		callback(mockRequests(path));
+		return;
+	}
+
+	var req = new XMLHttpRequest();	
+	req.open('GET', 'http://' + server_ip + '/' + path)
+	req.send();
+	req.onreadystatechange = function() {
+  	if(req.readyState == 4) {
+  		if(req.status == 200){
+	    	var obj = JSON.parse(req.responseText);
+	    	loadingprocess.style.display = 'none';
+	    	callback(obj);
+  		}
+  		else{
+				document.body.innerHTML = "Error:" + req.status;
+  		}
+  	}
+	};
+}
+
+function getProc(name, splitArray){
+	return function(states){
+		if(splitArray){
+			for(var i = 0; i < states.length; i++){
+				Create[name](states[i]);
+			}
+			return;
+		}
+		Create[name](states);
+	};
+}
+
+function makeLine(){
+	var line = document.createElement('div');
+	line.setAttribute('class', 'line');
+	return line;
+}
+
+Create.fan = function(state){
+	var elm = document.createElement('input');
+	elm.type = 'range';
+	elm.min = 0; elm.max = POWER.length - 1;
+	elm.value = POWER.findIndex(function(e){ return e[0] == state.on && e[1] == state.off });
+
+	var line = document.body.appendChild(makeLine());
+	var label = document.createElement('span');
+	label.innerHTML = 'POWER ID:' + state.id;	
+	line.appendChild(label);
+	line.appendChild(elm);
+	line.appendChild(document.createElement('br'));
+
+	elm.oninput = function (ev){
+		var on  = POWER[ev.target.value][0];
+		var off = POWER[ev.target.value][1];
+		var url = 'fans?id=' + state.id + '&on=' + on + '&off=' + off;
+		request(url);
+	};
+}
+
+Create.relay = function(state){
+	var elm = document.createElement('input');
+	elm.type = 'checkbox';
+	elm.checked = state.state == 'on' ? true : false;
+
+	var line = document.body.appendChild(makeLine());
+	
+	var label = document.createElement('span');
+	label.innerHTML = 'RELAY ID:' + state.id;
+	line.appendChild(label);
+	line.appendChild(elm);
+	line.appendChild(document.createElement('br'));
+
+	elm.onchange = function (ev){
+		var checked = ev.srcElement.checked ? 'true' : 'false';
+		var url = 'relays?id=' + state.id + '&on=' + checked;
+		request(url);
+	};
+}
+
+Create.t_sensor = function(state){
+	var elm = document.createElement('div');
+	elm.innerHTML = 'TEMP ID:' + state.id + ' T:' + state.t;
+	var line = document.body.appendChild(makeLine());
+	line.appendChild(elm);
+}
+
+Create.warmer = function(device){
+	var elm = document.createElement('div');
+	elm.innerHTML = 'WARMER ID:' + device.id + ' TC:' + device.current_t + ' TT:' + device.target_t + ' L:' + device.level;
+	var line = document.body.appendChild(makeLine());
+	line.appendChild(elm);
+}
+
+Create.info = function(devices){
+	devices.forEach(function(device){
+		Create[device.type](device);
+	});
+}
+
+request('info',  getProc('info'));
+</script>  
+</body>
+</html>
