@@ -4,26 +4,29 @@ namespace httpserver {
 // --------------------------------------------------------------------------
 namespace network {
 void initialize(uint8_t *macaddr, uint8_t *ipaddr) {
-  IPAddress ip(ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
-  Ethernet.begin(macaddr, ip);
-
-  //  while(!Ethernet.begin(mac)){
-  //    Serial.print("Failed to configure Ethernet using DHCP");
-  //    delay(5000);
-  //  }
+  if (ipaddr == nullptr) {
+    while (!Ethernet.begin(macaddr)) {
+      // Serial.println("Failed to configure Ethernet using DHCP");
+      delay(1000);
+    }
+  } else {
+    IPAddress ip(ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
+    Ethernet.begin(macaddr, ip);
+  }
 }
 }  // namespace network
 
 char buffer[buffer_size];
 // --------------------------------------------------------------------------
 NetworkService::NetworkService(uint16_t port) : server(port) {
-  Serial.print("My IP address: ");
+  // Serial.print("My IP address: ");
   auto ip = Ethernet.localIP();
 
   for (uint8_t thisByte = 0; thisByte < 4; thisByte++) {
-    Serial.print(ip[thisByte], DEC);
-    Serial.print(".");
+    // Serial.print(ip[thisByte], DEC);
+    // Serial.print(".");
   }
+  // Serial.println("done");
 
   server.begin();
 }

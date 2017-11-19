@@ -18,9 +18,16 @@ void Controller::body() {
   }
 
   auto out_temp = temp.getTemperatureCInt();
-
   if (out_temp > HEATER_MAX_TEMPERATURE) {
     turnOff();
+    first_step(HEATER_SLEEP_INTERVAL);
+    return;
+  }
+
+  if (target_temp == 100) {
+    coil.on_delay = 100;
+    coil.off_delay = 0;
+    current_level = 100;
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
@@ -30,6 +37,11 @@ void Controller::body() {
   // Serial.print(diff);
   // Serial.print(" target_temp:");
   // Serial.println(target_temp);
+
+  if (diff < -5) { // temperature has rised to fast
+    turnOff();     // this may happend on cold start
+    return;
+  }
 
   if (diff > 1) {
     if (current_level < total_levels - 1) {
