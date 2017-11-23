@@ -11,7 +11,7 @@ bool Text::operator==(const char *s) {
       return false;
     }
   }
-  return true;
+  return length > 0;
 }
 
 // --------------------------------------------------------------------------

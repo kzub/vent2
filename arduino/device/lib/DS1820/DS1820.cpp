@@ -92,15 +92,15 @@ int16_t Sensor::getTemperatureCInt() {
 //---------------------------------------------------------------
 float Sensor::getTemperatureC() {
   if (SignBit) {
-    return -Tc_100 / 100;
+    return ((float)(-Tc_100)) / 100;
   } else {
-    return Tc_100 / 100;
+    return ((float)(Tc_100)) / 100;
   }
 }
 
 //---------------------------------------------------------------
 void Sensor::checkResult() {
-  if (Whole > 125 || Fract >= 100) {
+  if (Whole > 100 || Fract >= 100) {
     // Serial.print("Bad result:");
     // Serial.print(SignBit);
     // Serial.print(" ");

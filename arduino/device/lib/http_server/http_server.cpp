@@ -6,7 +6,7 @@ namespace network {
 void initialize(const uint8_t *macaddr, const uint8_t *ipaddr) {
   if (ipaddr == nullptr) {
     while (!Ethernet.begin(macaddr)) {
-      Serial.println("Failed to configure Ethernet using DHCP");
+      // Serial.println("Failed to configure Ethernet using DHCP");
       delay(1000);
     }
   } else {

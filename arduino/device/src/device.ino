@@ -85,13 +85,12 @@ void write_warmer_response(httpserver::ResponseWriter &resp) {
 
   sprintf(buffer,
           "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%s, \"level\":%d, \"pin\":%d}\r\n",
-          buf, str_temp, warmer.current_level, warmer.pin);
+          buf, str_temp, warmer.coil.isOn(), warmer.pin);
   resp.write(buffer);
 }
 
 void handler_warmer(http::Request &request, httpserver::ResponseWriter &resp) {
   request.parameter("temp").value.copyFloatTo(warmer.target_temp);
-  request.parameter("level").value.copyUInt8To(warmer.current_level);
   finish_with_specific(resp, write_warmer_response);
 }
 

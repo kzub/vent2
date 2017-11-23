@@ -7,66 +7,36 @@ Controller::Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sen
 }
 
 #define HEATER_SLEEP_INTERVAL 1000
-#define HEATER_CHECK_INTERVAL 1000
-#define HEATER_MAX_TEMPERATURE 50
+#define HEATER_MAX_TEMPERATURE 50.0
 //----------------------------------------------------------------------
 void Controller::body() {
   if (fan.on_delay == 0 || target_temp == 0.0 || temp.error) {
-    turnOff();
+    coil.turnOff();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
-  auto out_temp = temp.getTemperatureC();
+  float out_temp = temp.getTemperatureC();
   if (out_temp > HEATER_MAX_TEMPERATURE) {
-    turnOff();
+    coil.turnOff();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
   // always on manual mode
   if (target_temp == 200.0) {
-    coil.on_delay = 200;
-    coil.off_delay = 0;
-    current_level = 200;
+    coil.turnOn();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
-  auto diff = target_temp - out_temp;
-  if (diff < -5.0) { // temperature has rised to fast
-    turnOff();     // this may happend on cold start
-    return;
+  float diff = target_temp - out_temp;
+  if (diff <= 0.0) {
+    coil.turnOff();
+  }else{
+    coil.turnOn();
   }
 
-  if (diff > 0.0) {
-    if (current_level < (total_levels*10) - 1) {
-      current_level++;
-      updateCurrentLevel();
-    }
-  } else if (diff < 0.0) {
-    if (current_level > 0) {
-      current_level--;
-      updateCurrentLevel();
-    }
-  }
-
-  first_step(HEATER_CHECK_INTERVAL);
+  first_step(HEATER_SLEEP_INTERVAL);
 }
-
-//----------------------------------------------------------------------
-void Controller::updateCurrentLevel() {
-  auto& level = levels[current_level/10];
-  coil.on_delay = level.on;
-  coil.off_delay = level.off;
-}
-
-//---------------------------------------------------
-void Controller::turnOff() {
-  coil.turnOff();
-  coil.on_delay = 0;
-  coil.off_delay = 0;
-  current_level = 0;
-}
-
 }  // namespace
