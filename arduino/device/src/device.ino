@@ -44,7 +44,7 @@ void write_relays_response(httpserver::ResponseWriter &resp);
 // --- INIT ---------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
-  Serial.println("initializing network...");
+  // Serial.println("initializing network...");
   httpserver::network::initialize(macaddr, nullptr /*, ipaddr*/);
 }
 
@@ -80,14 +80,18 @@ void write_warmer_response(httpserver::ResponseWriter &resp) {
   } else {
     warmer.temp.getTextValue(buf, sizeof(buf));
   }
+  char str_temp[6];
+  dtostrf(warmer.target_temp, 4, 2, str_temp);
+
   sprintf(buffer,
-          "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%d, \"level\":%d, \"pin\":%d}\r\n",
-          buf, warmer.target_temp, warmer.current_level, warmer.pin);
+          "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%s, \"level\":%d, \"pin\":%d}\r\n",
+          buf, str_temp, warmer.current_level, warmer.pin);
   resp.write(buffer);
 }
 
 void handler_warmer(http::Request &request, httpserver::ResponseWriter &resp) {
-  request.parameter("temp").value.copyInt16To(warmer.target_temp);
+  request.parameter("temp").value.copyFloatTo(warmer.target_temp);
+  request.parameter("level").value.copyUInt8To(warmer.current_level);
   finish_with_specific(resp, write_warmer_response);
 }
 
@@ -103,8 +107,8 @@ void write_relays_response(httpserver::ResponseWriter &resp) {
 }
 
 void handler_relays(http::Request &request, httpserver::ResponseWriter &resp) {
-  int8_t id = 0;
-  if (request.parameter("id").value.copyInt8To(id) && id < relays_count) {
+  uint8_t id = 0;
+  if (request.parameter("id").value.copyUInt8To(id) && id < relays_count) {
     if (request.parameter("on") == "true") {
       relays[id].turnOn();
     }
@@ -127,8 +131,8 @@ void write_fans_response(httpserver::ResponseWriter &resp) {
 }
 
 void handler_fans(http::Request &request, httpserver::ResponseWriter &resp) {
-  int8_t id = 0;
-  if (request.parameter("id").value.copyInt8To(id) && id < fans_count) {
+  uint8_t id = 0;
+  if (request.parameter("id").value.copyUInt8To(id) && id < fans_count) {
     request.parameter("on").value.copyUInt16To(fans[id].on_delay);
     request.parameter("off").value.copyUInt16To(fans[id].off_delay);
   }

@@ -7,68 +7,58 @@ Controller::Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sen
 }
 
 #define HEATER_SLEEP_INTERVAL 1000
-#define HEATER_CHECK_INTERVAL 5000
-#define HEATER_MAX_TEMPERATURE 60
+#define HEATER_CHECK_INTERVAL 1000
+#define HEATER_MAX_TEMPERATURE 50
 //----------------------------------------------------------------------
 void Controller::body() {
-  if (fan.on_delay == 0 || target_temp == 0 || temp.error) {
+  if (fan.on_delay == 0 || target_temp == 0.0 || temp.error) {
     turnOff();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
-  auto out_temp = temp.getTemperatureCInt();
+  auto out_temp = temp.getTemperatureC();
   if (out_temp > HEATER_MAX_TEMPERATURE) {
     turnOff();
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
-  if (target_temp == 100) {
-    coil.on_delay = 100;
+  // always on manual mode
+  if (target_temp == 200.0) {
+    coil.on_delay = 200;
     coil.off_delay = 0;
-    current_level = 100;
+    current_level = 200;
     first_step(HEATER_SLEEP_INTERVAL);
     return;
   }
 
-  int16_t diff = target_temp - out_temp;
-  // Serial.print("diff:");
-  // Serial.print(diff);
-  // Serial.print(" target_temp:");
-  // Serial.println(target_temp);
-
-  if (diff < -5) { // temperature has rised to fast
+  auto diff = target_temp - out_temp;
+  if (diff < -5.0) { // temperature has rised to fast
     turnOff();     // this may happend on cold start
     return;
   }
 
-  if (diff > 1) {
-    if (current_level < total_levels - 1) {
+  if (diff > 0.0) {
+    if (current_level < (total_levels*10) - 1) {
       current_level++;
-      coil.on_delay = levels[current_level].on;
-      coil.off_delay = levels[current_level].off;
-      // Serial.print("increase:");
-      // Serial.println(current_level);
-      // Serial.print("total:");
-      // Serial.println(total_levels);
+      updateCurrentLevel();
     }
-  } else if (diff < -1) {
+  } else if (diff < 0.0) {
     if (current_level > 0) {
       current_level--;
-      coil.on_delay = levels[current_level].on;
-      coil.off_delay = levels[current_level].off;
-      // Serial.print("decrease");
-      // Serial.println(current_level);
+      updateCurrentLevel();
     }
   }
 
-  // Serial.print("coil on:");
-  // Serial.print(coil.on_delay);
-  // Serial.print(" coil off:");
-  // Serial.println(coil.off_delay);
-
   first_step(HEATER_CHECK_INTERVAL);
+}
+
+//----------------------------------------------------------------------
+void Controller::updateCurrentLevel() {
+  auto& level = levels[current_level/10];
+  coil.on_delay = level.on;
+  coil.off_delay = level.off;
 }
 
 //---------------------------------------------------

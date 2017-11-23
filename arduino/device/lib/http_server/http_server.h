@@ -12,7 +12,7 @@
 namespace httpserver {
 namespace network {
 // --------------------------------------------------------------------------
-void initialize(uint8_t *macaddr, uint8_t *ipaddr);
+void initialize(const uint8_t *macaddr, const uint8_t *ipaddr);
 }  // namespace network
 
 const int buffer_size = 200;

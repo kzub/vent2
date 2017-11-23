@@ -17,7 +17,8 @@ class Text {
   int16_t get(char *buf, int16_t size);
   bool copyUInt16To(uint16_t &val);
   bool copyInt16To(int16_t &val);
-  bool copyInt8To(int8_t &val);
+  bool copyUInt8To(uint8_t &val);
+  bool copyFloatTo(float &val);
 
  private:
   char *position = nullptr;

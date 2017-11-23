@@ -56,7 +56,7 @@ bool Text::copyUInt16To(uint16_t &val) {
 }
 
 // --------------------------------------------------------------------------
-bool Text::copyInt8To(int8_t &val) {
+bool Text::copyUInt8To(uint8_t &val) {
   if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
     return false;
   }
@@ -66,6 +66,19 @@ bool Text::copyInt8To(int8_t &val) {
   val = atoi(value);
   return true;
 }
+
+// --------------------------------------------------------------------------
+bool Text::copyFloatTo(float &val) {
+  if (position == nullptr || length <= 0 || length >= MAX_NUMERIC_LEN) {
+    return false;
+  }
+  char value[MAX_NUMERIC_LEN];
+  memcpy(value, position, length);
+  value[length] = 0;
+  val = atof(value);
+  return true;
+}
+
 
 // combination of two words, parameter name and it value
 // --------------------------------------------------------------------------
@@ -159,7 +172,7 @@ int16_t parseHTTP(char *buf, int16_t size, Request &request) {
 // HTTP/1.0 200 OK\r\n
 // --------------------------------------------------------------------------
 size_t makeHTTPResponse(char *buf, uint16_t size, uint16_t code, const char *status) {
-  int16_t statuslen = strlen(status);
+  uint16_t statuslen = strlen(status);
   if (statuslen + 18 > size) {
     return -1;
   }

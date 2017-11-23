@@ -33,7 +33,7 @@ constexpr struct Speed levels[]{
 class Controller : public VT::Routine {
  public:
   Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sensor& temp);
-  int16_t target_temp = 0;
+  float target_temp = 0.0;
   uint8_t current_level = 0;
   const uint8_t pin;
   void turnOff();
@@ -43,6 +43,7 @@ class Controller : public VT::Routine {
  private:
   pwm::Controller coil;
   void body();
+  void updateCurrentLevel();
   bool is_on = false;
   pwm::Controller& fan;
 };

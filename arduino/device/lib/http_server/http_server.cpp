@@ -3,7 +3,7 @@
 namespace httpserver {
 // --------------------------------------------------------------------------
 namespace network {
-void initialize(uint8_t *macaddr, uint8_t *ipaddr) {
+void initialize(const uint8_t *macaddr, const uint8_t *ipaddr) {
   if (ipaddr == nullptr) {
     while (!Ethernet.begin(macaddr)) {
       Serial.println("Failed to configure Ethernet using DHCP");
