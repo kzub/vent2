@@ -10,11 +10,14 @@
 namespace heater {
 class Controller : public VT::Routine {
  public:
-  Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sensor& temp);
+  Controller(uint8_t pin, pwm::Controller& fan, temperature::DS1820Sensor& temp,
+             temperature::DS1820Sensor& ssr1, temperature::DS1820Sensor& ssr2);
   float target_temp = 0.0;
   const uint8_t pin;
 
   temperature::DS1820Sensor& temp;
+  temperature::DS1820Sensor& ssr1;
+  temperature::DS1820Sensor& ssr2;
   relay::Controller coil;
   pwm::Controller& fan;
 

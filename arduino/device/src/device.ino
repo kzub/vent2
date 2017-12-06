@@ -11,26 +11,25 @@ const uint8_t ipaddr[] = {192, 168, 55, 1};
 #define TEMP1_PIN 0
 #define TEMP2_PIN 1
 #define TEMP3_PIN 2
-#define FAN1_PIN 3
-#define FAN2_PIN 4
-#define RELAY1_PIN 5
-#define RELAY2_PIN 6
-#define RELAY3_PIN 7
-#define RELAY4_PIN 8
-#define HEATER_PIN 9
+#define TEMP4_PIN 3
+#define FAN1_PIN 4
+#define FAN2_PIN 5
+#define RELAY1_PIN 6
+#define RELAY2_PIN 7
+#define HEATER_PIN 8
 #define LED_PIN 13
 
 pwm::Controller fans[]{{FAN1_PIN}, {FAN2_PIN}};
 #define fans_count sizeof(fans) / sizeof(pwm::Controller)
 
-relay::Controller relays[] = {{RELAY1_PIN}, {RELAY2_PIN}, {RELAY3_PIN}, {RELAY4_PIN}};
+relay::Controller relays[] = {{RELAY1_PIN}, {RELAY2_PIN}};
 #define relays_count sizeof(relays) / sizeof(relay::Controller)
 
-temperature::DS1820Sensor t_sensors[] = {{TEMP1_PIN}, {TEMP2_PIN}, {TEMP3_PIN}};
+temperature::DS1820Sensor t_sensors[] = {{TEMP1_PIN}, {TEMP2_PIN}, {TEMP3_PIN}, {TEMP4_PIN}};
 #define t_sensors_count sizeof(t_sensors) / sizeof(temperature::DS1820Sensor)
 
 // temperature::DHT22Sensor temp1(TEMP1_PIN);
-heater::Controller warmer(HEATER_PIN, fans[0], t_sensors[0]);
+heater::Controller warmer(HEATER_PIN, fans[0], t_sensors[0], t_sensors[1], t_sensors[2]);
 
 char buffer[200];
 char buf[30];
@@ -84,8 +83,26 @@ void write_warmer_response(httpserver::ResponseWriter &resp) {
   dtostrf(warmer.target_temp, 4, 2, str_temp);
 
   sprintf(buffer,
-          "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%s, \"level\":%d, \"pin\":%d}\r\n",
+          "{\"type\": \"warmer\", \"current_t\":%s, \"target_t\":%s, \"level\":%d, \"pin\":%d, ",
           buf, str_temp, warmer.coil.isOn(), warmer.pin);
+  resp.write(buffer);
+
+  // ssr1 temperature
+  if (warmer.ssr1.error) {
+    sprintf(buf, "\"%s\"", warmer.ssr1.error.getMessage());
+  } else {
+    warmer.ssr1.getTextValue(buf, sizeof(buf));
+  }
+  sprintf(buffer, "\"ssr1\":%s, ", buf);
+  resp.write(buffer);
+
+  // ssr2 temperature
+  if (warmer.ssr2.error) {
+    sprintf(buf, "\"%s\"", warmer.ssr2.error.getMessage());
+  } else {
+    warmer.ssr2.getTextValue(buf, sizeof(buf));
+  }
+  sprintf(buffer, "\"ssr2\":%s}\r\n", buf);
   resp.write(buffer);
 }
 

@@ -10,6 +10,10 @@
 	    float: left;
 	    width: 100px;
 		}
+		.t_label2	{
+	    float: left;
+	    width: 30px;
+		}
 		.t_label	{
 			float: left;
 	    width: 130px;
@@ -49,9 +53,11 @@ function mockRequests(path){
 				{"type":"fan", "id":1, "on":200, "off":200, "pin":4},
 				{"type":"t_sensor", "id":0, "t":28, "pin":5},
 				{"type":"t_sensor", "id":1, "t":29, "pin":6},
+				{"type":"t_sensor", "id":2, "t":29, "pin":6},
+				{"type":"t_sensor", "id":3, "t":29, "pin":6},
 				{"type":"relay", "id":0, "on":true, "pin":9},
 				{"type":"relay", "id":1, "on":true, "pin":10},
-				{"type":"warmer", "id":0, "current_t":28, "target_t":30, "level":5, "pin":11}
+				{"type":"warmer", "id":0, "current_t":28, "target_t":22, "level":1, "pin":11, "ssr1": 10, "ssr2":10 }
 			];
 	}
 
@@ -59,17 +65,35 @@ function mockRequests(path){
 }
 mockRequests = undefined;
 
+let queueRequest = [];
 function request(path, callback){
 	if(mockRequests && callback){
 		callback(mockRequests(path));
 		return;
 	}
 
+	queueRequest.push([path, callback]);			
+}
+
+setInterval(function(){
+	if(queueRequest.length == 0 || requestInProgress){
+		return;
+	}
+
+	let task = queueRequest[queueRequest.length - 1];
+	queueRequest = [];
+	request1(task[0], task[1]);
+}, 1000);
+
+var requestInProgress = false;
+function request1(path, callback){
 	var req = new XMLHttpRequest();
 	req.open('GET', 'http://' + server_ip + '/' + path)
 	req.send();
+	requestInProgress = true;
 	req.onreadystatechange = function() {
   	if(req.readyState == 4) {
+  		requestInProgress = false;
   		if(req.status == 200){
 	    	var obj = JSON.parse(req.responseText);
 	    	loadingprocess.style.display = 'none';
@@ -144,7 +168,7 @@ Create.relay = function(state){
 	};
 }
 
-var t_sensors_names = ["OUT", "HEATER", "IN"];
+var t_sensors_names = ["OUT", "SSR1", "SSR2", "IN"];
 
 Create.t_sensor = function(device){
 	var elm = document.createElement('div');
@@ -158,15 +182,30 @@ Create.t_sensor = function(device){
 }
 
 Create.warmer = function(device){
-	var elm = document.createElement('div');
-	elm.innerHTML = 'WARMER';
-	elm.classList.add('t_label');
-	var line = document.body.appendChild(makeLine());
-	line.appendChild(elm);
+	var elm = document.createElement('input');
+	elm.type = 'range';
+	elm.min = 0; elm.max = 30;
+	elm.value = device.target_t;
 
-	var temp = document.createElement('div');
-	temp.innerHTML = Math.round(device.current_t) + '/' + device.target_t + ' L:' + device.level;
-	line.appendChild(temp);
+	var line = document.body.appendChild(makeLine());
+	var label = document.createElement('div');
+	label.classList.add('label');
+	label.innerHTML = 'WARMER';
+
+	var value = document.createElement('div');
+	value.classList.add('t_label2');
+	value.innerHTML =  device.target_t + (device.level ? '🔴' : '⚪️');
+
+	line.appendChild(label);
+	line.appendChild(value);
+	line.appendChild(elm);
+	line.appendChild(document.createElement('br'));
+
+	elm.oninput = function (ev){
+		value.innerHTML = ev.target.value + (device.level ? '🔴' : '⚪️');
+		var url = 'warmer?temp=' + ev.target.value;
+		request(url);
+	};
 }
 
 Create.info = function(devices){

@@ -42,7 +42,8 @@ void DS1820Sensor::body() {
     next_step(DS1820_READ_INTERVAL);
     return;
   }
-  // Serial.print("temp:");
+  // Serial.print(pin);
+  // Serial.print(" temp: ");
   // Serial.println(getTemperatureCInt());
 
   if (is_current_step()) {
