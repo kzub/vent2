@@ -5,7 +5,7 @@
 #include <temperature.h>
 #include <virtual_threads.h>
 
-const uint8_t macaddr[] = {0x90, 0xA2, 0xda, 0x10, 0xe2, 0x05};
+const uint8_t macaddr[] = {0x90, 0xA2, 0xda, 0x10, 0xe2, 0x24};
 const uint8_t ipaddr[] = {192, 168, 55, 2};
 
 #define TEMP1_PIN 1
@@ -23,7 +23,7 @@ char buf[30];
 // --- INIT ---------------------------------------------------------------------
 void setup() {
   barometr.begin();
-  httpserver::network::initialize(macaddr, /*nullptr,*/ ipaddr);
+  httpserver::network::initialize(macaddr, nullptr /*ipaddr*/);
 }
 
 // --- REQEUST HANDLERS ---------------------------------------------------------
