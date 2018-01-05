@@ -20,6 +20,8 @@ func main() {
 		Target_t float32
 		On       interface{}
 		Off      int
+		P        float32
+		H        float32
 	}
 
 	var devices []Device
@@ -61,6 +63,16 @@ func main() {
 				off := device.Off
 				field[k] = 100 * on / (on + off)
 			}
+			addStat(field)
+		} else if device.Type == "t_sensor22" {
+			field := make(map[string]interface{})
+			field["dht22_t"] = device.T
+			field["dht22_humidity"] = device.H
+			addStat(field)
+		} else if device.Type == "barometr" {
+			field := make(map[string]interface{})
+			field["barometr_t"] = device.T
+			field["barometr_p"] = device.P
 			addStat(field)
 		}
 	}

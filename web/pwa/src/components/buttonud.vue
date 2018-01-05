@@ -1,7 +1,7 @@
 <template>
   <div class="button-container">
     <div class="buttons">
-      <div  @touchstart="inc(pressId);" @touchend="pressId++"  class="button-up">
+      <div @touchstart="inc(pressId);" @touchend="pressId++"  class="button-up">
       </div>
       <div @touchstart="dec(pressId);" @touchend="pressId++" class="button-down">
       </div>
@@ -15,37 +15,35 @@
 <script>
 export default {
   name: 'buttonud',
+  props: ['sensor', 'max'],
   data () {
     return {
-      temp: 20,
       pressId: 0
     }
   },
-  props: [{
-    max: {
-      type: Number,
-      default: 30
+  computed: {
+    temp () {
+      return this.$store.state[this.sensor]
     }
-  }],
+  },
   methods: {
     inc: function (curId) {
-      console.log(this.max)
       if (curId !== this.pressId) {
         return
       }
       if (this.temp < this.max) {
-        this.temp++
+        this.$store.commit('warmerInc') // this.temp++
       }
-      setTimeout(this.inc, 250, curId)
+      setTimeout(this.inc, 200, curId)
     },
     dec: function (curId) {
       if (curId !== this.pressId) {
         return
       }
       if (this.temp > 0) {
-        this.temp--
+        this.$store.commit('warmerDec') // this.temp--
       }
-      setTimeout(this.dec, 250, curId)
+      setTimeout(this.dec, 200, curId)
     }
   }
 }
@@ -59,24 +57,27 @@ export default {
 }
 
 .button-container {
-  width: 140px;
-  height: 140px;
+  width: 110px;
+  height: 180px;
   border: 1px solid black;
+  margin: auto 6px;
 }
 
 .button-info {
   position: absolute;
-  height: 140px;
-  width: 140px;
+  /*height: 140px;*/
+  width: 110px;
   vertical-align: middle;
-  line-height: 140px;
+  line-height: 180px;
   font-size: 80px;
+  font-family: sans-serif;
   z-index: -1;
+  padding: auto 4px;
 }
 
 .button-up, .button-down {
-  height: 70px;
-  width: 140px;
+  height: 90px;
+  width: 110px;
   z-index: 100;
 }
 

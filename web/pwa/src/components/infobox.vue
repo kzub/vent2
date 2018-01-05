@@ -1,6 +1,6 @@
 <template>
-  <div class="info-container">
-    <div class="info-info">
+  <div class="info-container" :style="{ width: w, height: h, 'line-height': h }">
+    <div class="info-info" :style="{ 'font-size': fs }">
       {{temp}}
     </div>
   </div>
@@ -9,9 +9,10 @@
 <script>
 export default {
   name: 'infobox',
-  data () {
-    return {
-      temp: 20
+  props: ['sensor', 'w', 'h', 'fs'],
+  computed: {
+    temp () {
+      return this.$store.state[this.sensor]
     }
   }
 }
@@ -25,27 +26,19 @@ export default {
 }
 
 .info-container {
-  width: 140px;
-  height: 140px;
-  border: 1px solid black;
+  width: 90px;
+  height: 60px;
+  border: 1px solid grey;
+  margin: auto 4px;
+  font-family: sans-serif;
+  background: lightgrey;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 
 .info-info {
-  position: absolute;
-  height: 140px;
-  width: 140px;
-  vertical-align: middle;
-  line-height: 140px;
-  z-index: -1;
-}
-
-.info-up, .info-down {
-  height: 70px;
-  width: 140px;
-  z-index: 100;
-}
-
-.test {
-  color: #35495E;
+  z-index: +1;
+  font-size: 30px;
 }
 </style>
