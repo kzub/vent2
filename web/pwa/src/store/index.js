@@ -81,7 +81,7 @@ const store = new Vuex.Store({
     },
     outdoorSet (state, p) {
       state.outH = Math.round(p.temp.h) + '%'
-      state.outT = (p.temp.t > 0 ? '+' : '-') + Math.round(p.temp.t) + '°C'
+      state.outT = (p.temp.t > 0 ? '+' : '') + Math.round(p.temp.t) + '°C'
       state.outP = Math.round(p.baro.p) + 'mm'
     },
     updateTime (state) {
@@ -242,7 +242,12 @@ function serveRequests () {
 export default store
 
 store.dispatch('read')
+let lastTimeUpdate = 0
 setInterval(() => {
-  store.dispatch('read')
-  store.commit('updateTime')
-}, 60000)
+  let now = Date.now()
+  if (now - lastTimeUpdate > 60000) {
+    lastTimeUpdate = now
+    store.dispatch('read')
+    store.commit('updateTime')
+  }
+}, 1000)
