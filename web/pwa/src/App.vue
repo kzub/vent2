@@ -1,14 +1,13 @@
 <template>
   <div id="app">
-    <header @touchstart="showSettings()">
+    <header @touchstart=showSettings() :class=inProcess>
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=false">
-      <!-- <span>Room Climate</span> -->
+      <span :class=isLoading>loading...</span>
     </header>
     <main>
-      <!-- <img src="./assets/logo.png" alt="Vue.js PWA"> -->
       <router-view></router-view>
       <!-- settings window -->
-      <div :class="test">
+      <div :class="menuIpSettings">
         <div class="settings-content">
           <div>
             <label>IP1:</label> <input id="ip1" class="ip" type="text" :value="$store.state.ip1"><br>
@@ -29,7 +28,15 @@ export default {
   name: 'app',
   data () {
     return {
-      test: 'settings-hide'
+      menuIpSettings: 'element-hide'
+    }
+  },
+  computed: {
+    inProcess () {
+      return this.$store.state.inProcess ? 'in-process' : ''
+    },
+    isLoading () {
+      return this.$store.state.isLoading ? '' : 'element-hide'
     }
   },
   methods: {
@@ -40,11 +47,11 @@ export default {
         return
       }
 
-      this.test = 'settings-show'
-      console.log('settings->', this.test)
+      this.menuIpSettings = 'settings-show'
+      console.log('settings->', this.menuIpSettings)
     },
     hideSettings: function () {
-      this.test = 'settings-hide'
+      this.menuIpSettings = 'element-hide'
       let ip1 = document.getElementById('ip1').value
       let ip2 = document.getElementById('ip2').value
       console.log(ip1, ip2)
@@ -73,7 +80,7 @@ body {
   background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
 }
 
-.settings-hide {
+.element-hide {
   display: none
 }
 
@@ -112,14 +119,17 @@ header {
   color: #ffffff;
 }
 
+.in-process {
+  background-color: orange;
+}
+
 header span {
   display: block;
   position: relative;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: .02em;
-  font-weight: 400;
+  font-size: 24px;
+  line-height: 40px;
+  letter-spacing: 3px;
+  -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  padding-top: 16px;
 }
 </style>

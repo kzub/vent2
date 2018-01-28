@@ -47,7 +47,9 @@ const store = new Vuex.Store({
     preset3: loadPresets(2),
     presetBlink: false,
     ip1: ip1,
-    ip2: ip2
+    ip2: ip2,
+    inProcess: false,
+    isLoading: false
   },
   mutations: {
     warmerInc (state) {
@@ -116,10 +118,17 @@ const store = new Vuex.Store({
       store.state.ip1 = p.ip1
       store.state.ip2 = p.ip2
       localStorage.setItem('serverIPs', JSON.stringify(p))
+    },
+    setInPorcess (state, value) {
+      store.state.inProcess = value
+    },
+    setIsLoading (state, value) {
+      store.state.isLoading = value
     }
   },
   actions: {
     read ({ state, commit }) {
+      store.commit('setIsLoading', true)
       Promise.all([
         fetch(`http://${state.ip1}/`).then(r => {
           r.json().then(r => {
@@ -146,6 +155,8 @@ const store = new Vuex.Store({
         })
       ]).catch(err => {
         console.log('fetch err', err)
+      }).then(() => {
+        store.commit('setIsLoading', false)
       })
     }
   }
@@ -187,7 +198,6 @@ function loadPresets (id) {
 }
 
 let requestQueue = []
-let inProcess
 
 function updateFanSpeed (ip1, keyId, level) {
   let [on, off] = power[level]
@@ -212,10 +222,10 @@ function updateWarmerTemp (ip1, value) {
 }
 
 function serveRequests () {
-  if (inProcess) {
+  if (store.state.inProcess) {
     return
   }
-  inProcess = true
+  store.commit('setInPorcess', true)
 
   let routine = () => {
     let task = requestQueue.pop()
@@ -229,25 +239,25 @@ function serveRequests () {
       requestQueue.unshift(task)
     }).finally(() => {
       if (requestQueue.length) {
-        setTimeout(routine, 1000)
+        setTimeout(routine, 500)
       } else {
-        inProcess = false
+        store.commit('setInPorcess', false)
       }
     })
   }
 
-  setTimeout(routine, 1000)
+  setTimeout(routine, 0)
 }
 
 export default store
 
-store.dispatch('read')
 let lastTimeUpdate = 0
-setInterval(() => {
+function checkUpdate () {
   let now = Date.now()
   if (now - lastTimeUpdate > 60000) {
     lastTimeUpdate = now
     store.dispatch('read')
     store.commit('updateTime')
   }
-}, 1000)
+}
+setInterval(checkUpdate(), 1000)

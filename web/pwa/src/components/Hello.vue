@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <div class="row">
+    <div class="row infoline">
       <ladder sensor="fan0"></ladder>
       <buttonud sensor="tempWarmer" max="30"></buttonud>
       <ladder sensor="fan1"></ladder>
