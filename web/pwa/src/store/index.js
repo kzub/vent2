@@ -260,4 +260,16 @@ function checkUpdate () {
     store.commit('updateTime')
   }
 }
-setInterval(checkUpdate(), 1000)
+let updateId = setInterval(checkUpdate, 1000)
+checkUpdate()
+
+function handleVisibilityChange () {
+  clearInterval(updateId) // disable updates on page background
+  if (document.webkitHidden) {
+    lastTimeUpdate = 0 // force reload on next page open
+  } else {
+    updateId = setInterval(checkUpdate, 1000)
+  }
+}
+
+document.addEventListener('webkitvisibilitychange', handleVisibilityChange, false)
