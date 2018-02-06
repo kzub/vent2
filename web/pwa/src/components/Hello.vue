@@ -19,7 +19,7 @@
     <div class="row infoline">
       <infobox w="350px" h="70px" fs="50px" sensor="date"></infobox>
     </div>
-    <div class="row infoline">
+    <div class="row infoline" @click="reload">
       <infobox w="350px" h="80px" fs="70px" sensor="time"></infobox>
     </div>
     <div class="row infoline">
@@ -38,11 +38,26 @@ import Presets from '@/components/preset'
 
 export default {
   name: 'hello',
+  data () {
+    return {
+      lastClickTime: Date.now()
+    }
+  },
   components: {
     'buttonud': Button,
     'ladder': Ladder,
     'infobox': InfoBox,
     'preset': Presets
+  },
+  methods: {
+    reload: function () {
+      let time = Date.now() - this.lastClickTime
+      if (time < 400) {
+        console.log('reload')
+        this.$store.dispatch('read')
+      }
+      this.lastClickTime = Date.now()
+    }
   }
 }
 </script>
