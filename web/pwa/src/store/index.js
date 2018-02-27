@@ -131,7 +131,12 @@ const store = new Vuex.Store({
       store.commit('setIsLoading', true)
       Promise.all([
         fetch(`http://${state.ip1}/`).then(r => {
-          r.json().then(r => {
+          r.text().then(raw => {
+            // hack to compensate hardware minus temperature representation error
+            // remove after updating arduino firmware
+            let r = JSON.parse(raw.replace(/-\d\.-\d/g, (a) => {
+              return a.replace(/-/g, '')
+            }))
             let fans = r.filter(e => e.type === 'fan').map(getPowerLevel)
             let warmer = r.filter(e => e.type === 'warmer')
             let temps = r.filter(e => e.type === 't_sensor')
@@ -251,6 +256,10 @@ function serveRequests () {
 
 export default store
 
+store.dispatch('read')
+store.commit('updateTime')
+
+/* disable autorefresh to lower device energy consumption
 let lastTimeUpdate = 0
 function checkUpdate () {
   let now = Date.now()
@@ -273,3 +282,4 @@ function handleVisibilityChange () {
 }
 
 document.addEventListener('webkitvisibilitychange', handleVisibilityChange, false)
+*/
