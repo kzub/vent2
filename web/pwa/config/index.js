@@ -9,7 +9,8 @@ module.exports = {
     index: path.resolve(__dirname, '../dist/vent_app.html'),
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/storage/emulated/0/Download/',
+    // assetsPublicPath: '/storage/emulated/0/Download/',
+    assetsPublicPath: '/',
     productionSourceMap: true,
     // Gzip off by default as many popular static hosts such as
     // Surge or Netlify already gzip all static assets for you.
